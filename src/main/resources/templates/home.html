@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>All courses</title>
+        <link rel="stylesheet" th:href="@{/css/app-styles.css}">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+<body>
+<div th:replace="~{header.html}"></div>
+<div class="container">
+    <h2>Available Courses</h2>
+    <!-- Displaying the courses dynamically -->
+    <table>
+        <thead>
+            <tr>
+                <th>Course ID</th>
+                <th>Course Name</th>
+                <th>Description</th>
+                <th>Max seats</th>
+                <th>Available seats</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Iterate through the courses and display them -->
+            <tr th:each="course : ${courses}">
+                <td th:text="${course.id}"></td>
+                <td th:text="${course.name}"></td>
+                <td th:text="${course.description}"></td>
+                <td th:text="${course.maxCapacity}"></td>
+                <td th:text="${course.maxCapacity != null && course.currentCapacity != null ? course.maxCapacity - course.currentCapacity : 'N/A'}"></td>
+                <td>
+                <button 
+                    th:class="${#lists.contains(enrolledCourseIds, course.id)} ? 'drop-button' : 'enroll-button'"
+                    th:onclick="${#lists.contains(enrolledCourseIds, course.id)} ? 'drop(' + ${course.id} + ',' + ${userId} + ')' : 'enroll(' + ${course.id} + ',' + ${userId} + ')'" 
+                    th:text="${#lists.contains(enrolledCourseIds, course.id)} ? 'Drop' : 'Enroll'"
+                    th:disabled="${course.currentCapacity >= course.maxCapacity}"></button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Retrieve the session user ID and store in a JavaScript variable
+    var userId = [[${session.userID}]];
+    console.log('User ID from session: ' + userId);
+    function enroll(courseId) {
+        // Log the userId and courseId for debugging
+        console.log('Attempting to enroll User ID: ' + userId + ' in Course ID: ' + courseId);
+        // Send POST request to the backend with courseId and userId as query params
+        fetch(`/employeemanagement/enroll/${courseId}?userId=${userId}`, { method: 'POST' })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json(); // Expecting a JSON response from the backend
+            })
+            .then(data => {
+                console.log('Response from server:', data);
+                if (data.status === 'success') {
+                    alert('Successfully registerd!');
+                     window.location.reload();
+                } else {
+                    alert('User is already registered');
+                }
+            })
+            .catch(error => {
+                console.error('Error during enrollment:', error);
+                alert('An error occurred: ' + error.message);
+            });
+
+    }
+    /*]]>*/
+function drop(courseId) {
+        console.log('Attempting to drop User ID: ' + userId + ' from Course ID: ' + courseId);
+        fetch(`/employeemanagement/drop-course?userId=${userId}&courseId=${courseId}`, { method: 'GET' })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                alert(data.status === 'success' ? 'Course dropped successfully!' : 'Could not drop the course.');
+                window.location.reload(); // Refresh the page to update button state
+            })
+            .catch(error => alert('An error occurred: ' + error.message));
+    }
+    </script>        
+</body>
+</html>

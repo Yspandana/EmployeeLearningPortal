@@ -1,0 +1,8 @@
+<header>Employee Courses Portal</header>
+<nav>
+    <a href="/employeemanagement/home">All Courses</a>
+    <a th:href="@{/enrolled-courses(userId=${session.userId})}">Enrolled Courses</a>
+    <a th:href="@{/profile}">Profile</a>
+    <a th:href="@{/logout}">Logout</a>
+</nav>
+     

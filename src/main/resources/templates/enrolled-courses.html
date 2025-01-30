@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Enrolled Courses</title>
+        <link rel="stylesheet" th:href="@{/css/app-styles.css}">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+<body>
+    <div th:replace="~{header.html}"></div>
+<div class="container">
+    <h2>Enrolled Courses</h2>
+    <table> 
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Course ID</th>
+                <th>Course Name</th>
+                <th>Course Description</th>
+                <th>Enrolled Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="course : ${enrolledCourses}">
+                <td th:text="${course['userId']}"></td>
+                <td th:text="${course['courseId']}"></td>
+                <td th:text="${course['courseName']}"></td>
+                <td th:text="${course['courseDescription']}"></td>
+                <td th:text="${course['enrollmentDate']}"></td>
+                <td th:text="${course['status']}"></td>
+                <td>
+                    <button th:onclick="'dropCourse(' + ${course.courseId} + ', ' + ${userId} + ')'" >Drop</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Retrieve the session userId and store in JavaScript variable
+    var userId = [[${session.userID}]];
+    console.log('User ID from session: ' + userId);  // Debug log for userId
+
+    // JavaScript function to handle course enrollment
+    function dropCourse(courseId) {
+        console.log('Attempting to drop course:', courseId, 'for user:', userId);  // Debug log for courseId and userId
+        
+        // Ensure the userId is not null
+        if (userId === null || userId === "") {
+            console.error("User ID is not available.");
+            alert("User ID is not available.");
+            return; // Exit if userId is not available
+        }
+
+        fetch(`/employeemanagement/drop-course?userId=${userId}&courseId=${courseId}`, {
+            method: 'GET'
+        })
+        .then(response => {
+            console.log('Server response:', response);  // Log server response
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Server response data:', data);  // Log the response data
+            if (data.status === 'success') {
+                alert('Course dropped successfully!');
+                window.location.reload(); // Reload the page to see updated list
+            } else {
+                alert('Error dropping course');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);  // Log any errors that occur during the process
+            alert('An error occurred while dropping the course.');
+        });
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>
